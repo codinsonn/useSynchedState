@@ -1,2 +1,0 @@
-# useSynchedState
-Created with CodeSandbox
