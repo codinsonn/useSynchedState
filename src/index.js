@@ -5,31 +5,17 @@ import ReactDOM from "react-dom";
 // ...with react-dom (where the props are correct according to devtools)
 // More info & screenshots: https://github.com/facebook/react/issues/3005#issuecomment-463240372
 
-/* --- useSynchedState ------------------------------------------------------------------------------ */
+/* --- useStateWithCallback ------------------------------------------------------------------------------ */
 // Updates state when prop value changes
 
-const useSynchedState = (propValue, setStateCallback = null) => {
+const useStateWithCallback = (initialValue, setStateCallback = null) => {
   // State
-  const [stateValue, setStateValue] = useState(propValue);
-
-  // Update state when prop value changes
-  /*let synchTriggered = false;
-  useEffect(
-    () => {
-      synchTriggered = true; // Indicate the prop has changed
-      if (propValue !== stateValue) setStateValue(propValue);
-    },
-    [propValue] // Only fire when propValue has changed
-  );*/
+  const [stateValue, setStateValue] = useState(initialValue);
 
   // Fire callback on setState (if provided)
   useEffect(
     () => {
-      if (
-        //!synchTriggered &&
-        setStateCallback &&
-        typeof setStateCallback === "function"
-      ) {
+      if (setStateCallback && typeof setStateCallback === "function") {
         setStateCallback(stateValue);
       }
     },
@@ -39,12 +25,9 @@ const useSynchedState = (propValue, setStateCallback = null) => {
   // Return array with latest value + state setter
   return [
     // 0: latest value
-    //synchTriggered ? propValue : stateValue,
     stateValue,
     // 1: state setter
     setStateValue
-    // 2: metadata (optional)
-    //synchTriggered
   ];
 };
 
@@ -65,7 +48,7 @@ const FormOption = props => {
   } = props;
 
   // Synched State
-  const [checked, setChecked] = useSynchedState(props.checked, onChange); // synchs prop & state values
+  const [checked, setChecked] = useStateWithCallback(props.checked, onChange);
 
   // OptionJSX: checkbox / radiobutton
   const OptionJSX = (
@@ -78,7 +61,7 @@ const FormOption = props => {
       value={value}
       disabled={disabled}
       readOnly={readOnly}
-      // Triggers onChange callback passed to useSynchedState
+      // Triggers onChange callback passed to useStateWithCallback
       onChange={e => setChecked(e.currentTarget.checked)}
     />
   );
@@ -123,7 +106,7 @@ const FormRadioList = props => {
   } = props;
 
   // Synched State
-  const [value, setValue] = useSynchedState(props.value, onChange); // synchs prop & state values
+  const [value, setValue] = useStateWithCallback(props.value, onChange);
 
   // Choice ordering
   const orderedChoices = choiceOrder || Object.keys(choices);
@@ -135,7 +118,7 @@ const FormRadioList = props => {
         <FormOption
           // FIX: Invalidating the key when value updates returns new instance:
           // -> thus synching props with local state either way
-          key={`radio-${choice}-${value}`}
+          key={`radio-${choice}-${value}`} // FIX: added "-${value}"
           id={`radio-${choice}`}
           type="radio"
           name={name}
@@ -145,7 +128,7 @@ const FormRadioList = props => {
           disabled={disabled}
           readOnly={readOnly}
           isCustom={isCustom}
-          // Triggers onChange callback passed to useSynchedState
+          // Triggers onChange callback passed to useStateWithCallback
           onChange={val => {
             if (val) setValue(choice);
           }}
@@ -167,6 +150,7 @@ ReactDOM.render(
       thirdchoice: "Third Choice"
     }}
     name="someradiolist"
+    value="secondchoice"
     disabled={false}
     readOnly={false}
     isCustom={false}
