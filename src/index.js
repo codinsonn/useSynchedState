@@ -13,20 +13,20 @@ const useSynchedState = (propValue, setStateCallback = null) => {
   const [stateValue, setStateValue] = useState(propValue);
 
   // Update state when prop value changes
-  let synchTriggered = false;
+  /*let synchTriggered = false;
   useEffect(
     () => {
       synchTriggered = true; // Indicate the prop has changed
       if (propValue !== stateValue) setStateValue(propValue);
     },
     [propValue] // Only fire when propValue has changed
-  );
+  );*/
 
   // Fire callback on setState (if provided)
   useEffect(
     () => {
       if (
-        !synchTriggered &&
+        //!synchTriggered &&
         setStateCallback &&
         typeof setStateCallback === "function"
       ) {
@@ -39,11 +39,12 @@ const useSynchedState = (propValue, setStateCallback = null) => {
   // Return array with latest value + state setter
   return [
     // 0: latest value
-    synchTriggered ? propValue : stateValue,
+    //synchTriggered ? propValue : stateValue,
+    stateValue,
     // 1: state setter
-    setStateValue,
+    setStateValue
     // 2: metadata (optional)
-    synchTriggered
+    //synchTriggered
   ];
 };
 
@@ -132,7 +133,9 @@ const FormRadioList = props => {
     <div>
       {orderedChoices.map(choice => (
         <FormOption
-          key={`radio-${choice}`}
+          // FIX: Invalidating the key when value updates returns new instance:
+          // -> thus synching props with local state either way
+          key={`radio-${choice}-${value}`}
           id={`radio-${choice}`}
           type="radio"
           name={name}
