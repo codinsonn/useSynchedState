@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React from "react";
 // Hooks
 import useStateWithCallback from "./hooks/useStateWithCallback";
 // ^ useStateWithCallback uses useSynchedState internally
@@ -9,60 +9,33 @@ import useStateWithCallback from "./hooks/useStateWithCallback";
 
 const FormOption = props => {
   // Extract props
-  const {
-    type = "checkbox",
-    lbl,
-    name,
-    value,
-    id,
-    disabled,
-    readOnly,
-    onChange,
-    isCustom
-  } = props;
+  const { type = "checkbox", lbl, name, value, id, onChange } = props;
 
-  // Synched State
-  const [checked, setChecked] = useStateWithCallback(props.checked, onChange); // synchs prop & state values
-
-  // OptionJSX: checkbox / radiobutton
-  const OptionJSX = (
-    <input
-      type={type}
-      name={name}
-      checked={checked}
-      id={id}
-      className={isCustom ? "custom-control-input" : "form-check-input"}
-      value={value}
-      disabled={disabled}
-      readOnly={readOnly}
-      // Triggers onChange callback passed to useStateWithCallback
-      // (which uses useSynchedState internally...)
-      // (... to update state when props change)
-      onChange={e => setChecked(e.currentTarget.checked)}
-    />
-  );
+  // State (with callback, uses useSynchedState internally)
+  const [checked, setChecked] = useStateWithCallback(
+    typeof value === "boolean" ? value : props.checked,
+    onChange // callback
+  ); // ^ fires callback when state changes
 
   // Render
   return (
-    <div
-      className={isCustom ? `custom-control custom-${type}` : "form-check"}
-      key={id}
-    >
-      {isCustom ? (
-        <Fragment>
-          {OptionJSX}
-          <label htmlFor={id} className="custom-control-label">
-            {lbl}
-          </label>
-        </Fragment>
-      ) : (
-        <label htmlFor={id} className="form-check-label">
-          <span className={`input${checked ? " checked" : ""}`}>
-            {OptionJSX}
-          </span>
-          {` ${lbl}`}
-        </label>
-      )}
+    <div key={id}>
+      <label htmlFor={id} className="form-check-label">
+        <span className={`input${checked ? " checked" : ""}`}>
+          <input
+            type={type}
+            name={name}
+            checked={checked}
+            id={id}
+            value={value}
+            // Triggers onChange callback passed to useStateWithCallback
+            // (which uses useSynchedState internally...)
+            // (... to update state when props change)
+            onChange={e => setChecked(e.currentTarget.checked)}
+          />
+        </span>
+        {` ${lbl}`}
+      </label>
     </div>
   );
 };
@@ -81,8 +54,8 @@ export const FormRadioList = props => {
     onChange
   } = props;
 
-  // Synched State
-  const [value, setValue] = useStateWithCallback(props.value, onChange); // synchs prop & state values
+  // State (with callback)
+  const [value, setValue] = useStateWithCallback(props.value, onChange); // fires callback when state changes
 
   // Choice ordering
   const orderedChoices = choiceOrder || Object.keys(choices);
@@ -92,7 +65,10 @@ export const FormRadioList = props => {
     <div>
       {orderedChoices.map(choice => (
         <FormOption
-          key={`radio-solution-${choice}`}
+          // -!- SOLUTION: -!-
+          // Return new instance when value changes by invalidating key
+          // -> This also triggers props & state synch in the process
+          key={`radio-solution-${choice}-${value}`}
           id={`radio-solution-${choice}`}
           type="radio"
           name={name}
@@ -114,16 +90,23 @@ export const FormRadioList = props => {
   );
 };
 
-/* --- Export & Explain Initial Problem -------------------------- */
+/* --- Export & Explain Solution -------------------------- */
 
 const Solution = () => (
   <div>
     <h2>Solution:</h2>
-    <h3>Refactor useSynchedState to behave more like componentDidUpdate</h3>
+    <h3>
+      Invalidating key to return new FormOption instance when value changes.
+    </h3>
     <p>The code that solved the initial problem is found in:</p>
     <ul>
-      <li>hooks/useSynchedState.js (hook)</li>
-      <li>solution.js (application)</li>
+      <li>solution.js (on line 71)</li>
+    </ul>
+    <p>But a refactor, split & simplification has also been done of:</p>
+    <ul>
+      <li>usePrevious.js</li>
+      <li>useSynchedState.js</li>
+      <li>useStateWithCallback.js</li>
     </ul>
     <p>Try checking a different option a bunch of times now:</p>
     <FormRadioList
