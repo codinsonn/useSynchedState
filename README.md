@@ -4,6 +4,10 @@ This codesandbox is both an attempt at finding a hook that can update state when
 
 (scroll down for solution btw)
 
+Before resorting to using the `useSynchedState` or `useStateWithCallback` hooks, please read this article by the React team first:
+
+[You probably don't need derived state](https://reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html)
+
 ## Custom React Hooks
 
 `./src/hooks/usePrevious.js`
